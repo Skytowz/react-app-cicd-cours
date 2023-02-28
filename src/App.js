@@ -1,7 +1,9 @@
 import logo from './logo.svg';
 import './App.css';
+import Config from './config.json';
 
 function App() {
+  const TEST_VARIABLE = Config.TEST_VARIABLE;
   return (
     <div className="App">
       <header className="App-header">
@@ -17,6 +19,7 @@ function App() {
         >
           Learn React
         </a>
+        <p>Ma variable d'environnement { TEST_VARIABLE }</p>
       </header>
     </div>
   );
