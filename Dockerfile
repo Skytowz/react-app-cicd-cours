@@ -27,7 +27,7 @@
 # 
 # CMD ["nginx", "-g", "daemon off;"]
 
-FROM node:14
+FROM node:14 as build
 ENV JQ_VERSION=1.6
 RUN wget --no-check-certificate https://github.com/stedolan/jq/releases/download/jq-${JQ_VERSION}/jq-linux64 -O /tmp/jq-linux64
 RUN cp /tmp/jq-linux64 /usr/bin/jq
@@ -37,20 +37,14 @@ COPY . .
 RUN jq 'to_entries | map_values({ (.key) : ("$" + .key) }) | reduce .[] as $item ({}; . + $item)' ./src/config.json > ./src/config.tmp.json && mv ./src/config.tmp.json ./src/config.json
 RUN npm install && npm run build
 
-FROM nginx:1.17
-# Angular
-# ENV JSFOLDER=/usr/share/nginx/html/*.js
-# React
+FROM nginx:1.17 as production
+
 ENV JSFOLDER=/usr/share/nginx/html/static/js/*.js
-# VueJS
-# ENV JSFOLDER=/usr/share/nginx/html/js/*.js
+
 COPY ./start-nginx.sh /usr/bin/start-nginx.sh
 RUN chmod +x /usr/bin/start-nginx.sh
 WORKDIR /usr/share/nginx/html
-# Angular
-# COPY --from=0 /app/dist/<projectName> .
-# React
-COPY --from=0 /app/build .
-# VueJS
-# COPY --from=0 /app/dist .
+
+COPY --from=build /app/build .
+
 ENTRYPOINT [ "start-nginx.sh" ]
